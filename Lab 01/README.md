@@ -1,4 +1,4 @@
-## LC3 Simulator Steps:
+## LC3 Simulator Steps
 1. Add decimal number -23 to memory location x3000
 2. Add student UID (0710) to memory location x3001
 3. Append string "Hello, my name is Joe." from memory location x3002 using ASCII:
@@ -24,3 +24,8 @@
     | x4006     | -8    |
     | x4007     | x4008 |
     | x4008     | -10   |
+
+## Screenshot
+
+![Screenshot](https://raw.githubusercontent.com/joeesmithh/ceg3310-assignments/refs/heads/main/Lab%2001/CEG%203310%20Lab%2001%20Screenshot.png?token=GHSAT0AAAAAADJV25ZNPGNU4L2HWSFAI25S2FOQOXA)
+    
