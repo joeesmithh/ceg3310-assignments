@@ -1,7 +1,7 @@
 ## LC3 Simulator Steps:
 1. Add decimal number -23 to memory location x3000
 2. Add student UID (0710) to memory location x3001
-3. Append string "Hello, my name is Joe" from memory location x3002 using ASCII:
+3. Append string "Hello, my name is Joe." from memory location x3002 using ASCII:
 
     `72 101 108 108 111 44 32 109 121 32 110 97 109 101 32 105 115 32 74 111 101 46`
     | Location  | Value |
