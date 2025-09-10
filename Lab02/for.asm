@@ -1,10 +1,8 @@
 .ORIG x3000
 
-ITERATIONS .FILL #3 ; Allow user to specify iteration count, default 3
-LD R1, ITERATIONS   ; Load interation count in R1
+LD R1, ITERATIONS
 
-; Negate iteration count
-;  for-loop termination condition
+; Negate iteration termination condition
 NOT R2, R1
 ADD R2, R2, #1
 
@@ -20,6 +18,7 @@ STI R3, RES_ADDRESS ; Store result in x8001
 HALT
 
 ; Variables
+ITERATIONS .FILL #3
 RES_ADDRESS .Fill x8001
 
 .END
