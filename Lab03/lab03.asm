@@ -36,13 +36,17 @@ JSR	GETNUM
 AND R1, R1, #0
 ADD R1, R1, R0
 
-; Store first number in R0
-AND R0, R0, #0
-ADD R0, R0, R3
-
 ; Output new line
 LD R0, NEWLINE_CHAR
 OUT
+
+; Store first number in R0 and run CALC
+AND R0, R0, #0
+ADD R0, R0, R3
+JSR CALC
+
+AND R4, R4, #0
+ADD R4, R4, R0
 
 HALT
 ; - - - - - - - - - - - - - - - - -
@@ -183,21 +187,15 @@ GETC
 OUT
 
 ; Validate input
-LD R1, TIMES_CHAR
-NOT R1, R1
-ADD R1, R1, #1
+LD R1, GETOP_TIMES_CHAR
 ADD R1, R0, R1
 BRz GETOP_SUCCESS
 
-LD R1, PLUS_CHAR
-NOT R1, R1
-ADD R1, R1, #1
+LD R1, GETOP_PLUS_CHAR
 ADD R1, R0, R1
 BRz GETOP_SUCCESS
 
-LD R1, MINUS_CHAR
-NOT R1, R1
-ADD R1, R1, #1
+LD R1, GETOP_MINUS_CHAR
 ADD R1, R0, R1
 BRz GETOP_SUCCESS
 
@@ -214,24 +212,102 @@ RET
 ; GETOP VARS
 GETOP_R1 .BLKW	#1
 GETOP_R7 .BLKW	#1
-TIMES_CHAR .FILL x002A
-PLUS_CHAR .FILL x002B
-MINUS_CHAR .FILL x002D
+GETOP_TIMES_CHAR .FILL xFFD6 ; Negated ASCII op chars
+GETOP_PLUS_CHAR .FILL xFFD5  ;
+GETOP_MINUS_CHAR .FILL xFFD3 ;
 OP_ERROR_MSG .STRINGZ "Invalid input! Enter one of (+, -, or *): "
 ; END GETOP = = = = = = = = = = = = = = = = =
 
 
 
 
-; = = = = = = = = = = = = = = = = =
+; CALC = = = = = = = = = = = = = = = = =
+; Takes registers R0-R3 as operands and operator,
+;   respectively, and stores the result in R0;
+;
+; Input:
+;       R0  (int): left operand
+;       R1  (int): right operand
+;       R2 (char): operator
+; Output:
+;       R0  (int): result
 CALC
 
-; CALC CODE HERE
+; Callee saves
+ST R3, CALC_R3
+ST R7, CALC_R7
+
+; Branch to respective operator if match
+LD R3, CALC_TIMES_CHAR
+ADD R3, R2, R3
+BRz CALC_MULTIPLY         ; Multiply
+LD R3, CALC_PLUS_CHAR
+ADD R3, R2, R3
+BRz CALC_ADD              ; Add
+LD R3, CALC_MINUS_CHAR
+ADD R3, R2, R3
+BRz CALC_SUBTRACT         ; Subtract
+
+BRnzp CALC_END ; Unconditional branch to end of subroutine
+
+; Multiply
+;--------------------------------------
+CALC_MULTIPLY
+
+; Branch if either operator == 0
+ADD R0, R0, #0
+BRz TIMES_ZERO
+ADD R1, R1, #0
+BRz TIMES_ZERO
+
+; Assign R3 = rhs operator - 1      5*6 5+5+5+5+5+5
+AND R3, R3, #0
+ADD R3, R3, R1
+ADD R3, R3, #-1
+
+; Set R1 = lhs operator
+AND R1, R1, #0
+ADD R1, R1, R0
+
+DO_MULTIPLY
+ADD R0, R0, R1
+ADD R3, R3, #-1
+BRnp DO_MULTIPLY
+
+BRnzp CALC_END
+
+; Add
+;--------------------------------------
+CALC_ADD
+
+
+BRnzp CALC_END
+
+
+; Subtract
+;--------------------------------------
+CALC_SUBTRACT
+
+
+BRnzp CALC_END
+
+TIMES_ZERO
+AND R0, R0, #0 ; R0 = 0
+
+CALC_END ; No valid operator
+
+LD R3, CALC_R3
+LD R7, CALC_R7 ; Callee loads
 
 RET
 ; - - - - - - - - - - - - - - - - -
 
 ; CALC VARS
+CALC_R3 .BLKW #1
+CALC_R7 .BLKW #1
+CALC_TIMES_CHAR .FILL xFFD6 ; Negated ASCII op chars
+CALC_PLUS_CHAR .FILL xFFD5  ;
+CALC_MINUS_CHAR .FILL xFFD3 ;
 ; = = = = = = = = = = = = = = = = =
 
 
