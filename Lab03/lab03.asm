@@ -1,14 +1,11 @@
 .ORIG x3000
-; = = = = = = = = = = = = = = = = =
+; MAIN = = = = = = = = = = = = = = = = =
 
-; Get first number
+; Get #1
 LEA	R0,	PROMPT1
 PUTS
 JSR	GETNUM
-
-; Store number in R3
-AND R3, R3, #0
-ADD R3, R3, R0
+ST	R0,	OPERAND_LHS
 
 ; Output new line
 LD R0, NEWLINE_CHAR
@@ -18,98 +15,140 @@ OUT
 LEA	R0,	PROMPT2
 PUTS
 JSR	GETOP
-
-; Store operator in R2
-AND R2, R2, #0
-ADD R2, R2, R0
+ST	R0,	OPERATOR
 
 ; Output new line
 LD R0, NEWLINE_CHAR
 OUT
 
-; Get second number
+; Get #2
 LEA	R0,	PROMPT3
 PUTS
 JSR	GETNUM
-
-; Store second number in R1
-AND R1, R1, #0
-ADD R1, R1, R0
+ST	R0,	OPERAND_RHS
 
 ; Output new line
 LD R0, NEWLINE_CHAR
 OUT
 
-; Store first number in R0 and run CALC
-AND R0, R0, #0
-ADD R0, R0, R3
+; Calculate with inputs R0-R2
+LD	R0,	OPERAND_LHS
+LD	R1,	OPERAND_RHS
+LD	R2,	OPERATOR
 JSR CALC
 
-AND R4, R4, #0
-ADD R4, R4, R0
+; Output result
+JSR DISPLAY
 
 HALT
-; - - - - - - - - - - - - - - - - -
-; MAIN VARS
-NEWLINE_CHAR .FILL x000A
-PROMPT1 .STRINGZ "Enter first number (0-99): "
-PROMPT2 .STRINGZ "Enter an operation (+, -, *): "
-PROMPT3 .STRINGZ "Enter second number (0-99): "
-; = = = = = = = = = = = = = = = = =
+
+; MAIN VARS - - - - - - - - - - - - - - - - -
+OPERAND_LHS     .BLKW #1
+OPERAND_RHS     .BLKW #1
+OPERATOR        .BLKW #1
+NEWLINE_CHAR    .FILL x000A
+PROMPT1         .STRINGZ "Enter first number (0-99): "
+PROMPT2         .STRINGZ "Enter an operation (+, -, *): "
+PROMPT3         .STRINGZ "Enter second number (0-99): "
+; End of MAIN = = = = = = = = = = = = = = = = =
 
 
 
 ; DISPLAY = = = = = = = = = = = = = = = = =
 ; Takes an integer stored in R0 and outputs to console
 DISPLAY
-ST R1, DISPLAY_R1 ; Subtraction checker
-ST R2, DISPLAY_R2 ; Stores -1000, -100, -10
-ST R3, DISPLAY_R3 ; 
+ST R1, DISPLAY_R1
+ST R2, DISPLAY_R2
+ST R3, DISPLAY_R3
 ST R7, DISPLAY_R7
-LEA R2, DISPLAY_CHARS
+LEA R2, DISPLAY_ARRAY
 
+; Save R0 in R1
+AND R1, R1, #0
+ADD R1, R1, R0
+
+; Output "Result: "
+LEA R0, DISPLAY_PROMPT
+PUTS
+
+; Test negative
+ADD R1, R1, #0
+BRzp NOT_NEGATIVE
+
+; Num was negative
+LD R0, DISPLAY_NEG_CHAR
+OUT
+NOT R1, R1
+ADD R1, R1, #1 ; Convert stored num to positive
+
+; BRANCH TARGET: Load positive number back into R0
+NOT_NEGATIVE
+AND R0, R0, #0
+ADD R0, R0, R1
+
+; BRANCH TARGET: Initialize new quotient
 NEW_QUOTIENT
-AND R1, R1, #0      ; R1 = 0
+AND R1, R1, #0
 
+; BRANCH TARGET: Subtract 10 from quotient
 SUB10
-ADD R0, R0, #-10    ; Subtract from main num until negative
+ADD R0, R0, #-10
 BRzp BUILD_QUOTIENT
 
-ADD R0, R0, #10     ; Bring back remainder
-LD R3, DISPLAY_48   ; Load #48 into R3
-ADD R0, R0, R3      ; Add #48 to remainder
-STR	R0, R2, #0      ; Store new char in DISPLAY_CHARS
+; Quotient found - store remainder
+ADD R0, R0, #10
+STR	R0, R2, #0
+
+; Branch if quotient = 0
+ADD R1, R1, #0
+BRz DISPLAY_SHOW
+
+; Prepare for branch
 ADD R2, R2, #1      ; Increment DISPLAY_CHARS address
 AND R0, R0, #0
 ADD R0, R0, R1      ; R0 = quotient
-ADD R1, R1, #-10
-BRp NEW_QUOTIENT
+BRnzp NEW_QUOTIENT
 
-BRnzp END_DISPLAY
-
+; BRANCH TARGET: Accumulate quotient
 BUILD_QUOTIENT
 ADD R1, R1, #1
 BRnzp SUB10
 
-END_DISPLAY
+; BRANCH TARGET: Initialize display
+DISPLAY_SHOW
+LD R1, DISPLAY_48       ; R1 = #48
+LEA R3, DISPLAY_ARRAY
+NOT R3, R3
+ADD R3, R3, #1          ; R3 = -DISPLAY_ARRAY address
 
+; BRANCH TARGET: Output next char
+DISPLAY_NEXT
+LDR R0, R2, #0  ; Load int from current address
+ADD R0, R0, R1  ; Convert to char
+OUT             ; Output char
 
+; Prepare for branch
+ADD R2, R2, #-1 ; Decrement char array address
+ADD R0, R2, R3  ; Check if current address < starting address
+BRzp DISPLAY_NEXT
+
+; Callee loads
 LD R1, DISPLAY_R1
 LD R2, DISPLAY_R2
 LD R3, DISPLAY_R2
 LD R7, DISPLAY_R7
 
 RET
-; - - - - - - - - - - - - - - - - -
-
-; DISPLAY VARS
+; DISPLAY VARS - - - - - - - - - - - - - - - - -
 DISPLAY_R1 .BLKW #1
 DISPLAY_R2 .BLKW #1
 DISPLAY_R3 .BLKW #1
 DISPLAY_R7 .BLKW #1
 DISPLAY_48 .FILL x0030
-DISPLAY_CHARS .BLKW	#4
-; = = = = = = = = = = = = = = = = =
+DISPLAY_NEG_CHAR .FILL x002D
+DISPLAY_ARRAY .BLKW	#4
+DISPLAY_PROMPT .STRINGZ	"Result: "
+; End of DISPLAY = = = = = = = = = = = = = = = =
 
 
 
@@ -190,15 +229,14 @@ LD  R2, GETNUM_R2
 LD	R7,	GETNUM_R7
 
 RET
-; - - - - - - - - - - - - - - - - -
-; GETNUM VARS
+
+; GETNUM VARS - - - - - - - - - - - - - - - - -
 GETNUM_R1 .BLKW	#1
 GETNUM_R2 .BLKW	#1
 GETNUM_R7 .BLKW	#1
 NEG_48 .FILL xFFD0
 ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
-; END GETNUM = = = = = = = = = = = = = = = = =
-
+; End of GETNUM = = = = = = = = = = = = = = = = =
 
 
 
@@ -249,16 +287,15 @@ LD	R1,	GETOP_R1
 LD	R7,	GETOP_R7
 
 RET
-; - - - - - - - - - - - - - - - - -
-; GETOP VARS
+
+; GETOP VARS - - - - - - - - - - - - - - - - -
 GETOP_R1 .BLKW	#1
 GETOP_R7 .BLKW	#1
 GETOP_TIMES_CHAR .FILL xFFD6 ; Negated ASCII op chars
 GETOP_PLUS_CHAR .FILL xFFD5  ;
 GETOP_MINUS_CHAR .FILL xFFD3 ;
 OP_ERROR_MSG .STRINGZ "Invalid input! Enter one of (+, -, or *): "
-; END GETOP = = = = = = = = = = = = = = = = =
-
+; End of GETOP = = = = = = = = = = = = = = = = =
 
 
 
@@ -289,13 +326,13 @@ LD R3, CALC_MINUS_CHAR
 ADD R3, R2, R3
 BRz CALC_SUBTRACT         ; Subtract
 
-BRnzp CALC_END ; Unconditional branch to end of subroutine
+; Branch unconditionally if no valid operator
+BRnzp CALC_END
 
-; Multiply
-;--------------------------------------
+; BRANCH TARGET: Multiply
 CALC_MULTIPLY
 
-; Branch if either operator == 0
+; Branch if either operand = 0
 ADD R0, R0, #0
 BRz ZERO_PRODUCT
 ADD R1, R1, #0
@@ -316,25 +353,18 @@ ADD R0, R0, R1
 ADD R3, R3, #-1
 BRnp DO_MULTIPLY
 BRnzp CALC_END
-; --------------------------------------
 
-
-; Add
-;--------------------------------------
+; BRANCH TARGET: Add
 CALC_ADD
 ADD R0, R0, R1
 BRnzp CALC_END
-; --------------------------------------
 
-
-; Subtract
-; --------------------------------------
+; BRANCH TARGET: Subtract
 CALC_SUBTRACT
 NOT R1, R1
 ADD R1, R1, #1
 ADD R0, R0, R1
 BRnzp CALC_END
-; --------------------------------------
 
 ; Brach here if either R0 or R1 == 0
 ZERO_PRODUCT
@@ -348,16 +378,12 @@ LD R3, CALC_R3
 LD R7, CALC_R7
 
 RET
-; - - - - - - - - - - - - - - - - -
-
-; CALC VARS
+; CALC VARS - - - - - - - - - - - - - - - - -
 CALC_R3 .BLKW #1
 CALC_R7 .BLKW #1
 CALC_TIMES_CHAR .FILL xFFD6 ; Negated ASCII op chars
 CALC_PLUS_CHAR .FILL xFFD5  ;
 CALC_MINUS_CHAR .FILL xFFD3 ;
-; = = = = = = = = = = = = = = = = =
-
-
+; End of CALC = = = = = = = = = = = = = = = = =
 
 .END
