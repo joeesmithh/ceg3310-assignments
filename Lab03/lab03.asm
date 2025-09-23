@@ -59,15 +59,56 @@ PROMPT3 .STRINGZ "Enter second number (0-99): "
 
 
 
-; = = = = = = = = = = = = = = = = =
+; DISPLAY = = = = = = = = = = = = = = = = =
+; Takes an integer stored in R0 and outputs to console
 DISPLAY
+ST R1, DISPLAY_R1 ; Subtraction checker
+ST R2, DISPLAY_R2 ; Stores -1000, -100, -10
+ST R3, DISPLAY_R3 ; 
+ST R7, DISPLAY_R7
+LEA R2, DISPLAY_CHARS
 
-; DISPLAY CODE HERE
+NEW_QUOTIENT
+AND R1, R1, #0      ; R1 = 0
+
+SUB10
+ADD R0, R0, #-10    ; Subtract from main num until negative
+BRzp BUILD_QUOTIENT
+
+ADD R0, R0, #10     ; Bring back remainder
+LD R3, DISPLAY_48   ; Load #48 into R3
+ADD R0, R0, R3      ; Add #48 to remainder
+STR	R0, R2, #0      ; Store new char in DISPLAY_CHARS
+ADD R2, R2, #1      ; Increment DISPLAY_CHARS address
+AND R0, R0, #0
+ADD R0, R0, R1      ; R0 = quotient
+ADD R1, R1, #-10
+BRp NEW_QUOTIENT
+
+BRnzp END_DISPLAY
+
+BUILD_QUOTIENT
+ADD R1, R1, #1
+BRnzp SUB10
+
+END_DISPLAY
+
+
+LD R1, DISPLAY_R1
+LD R2, DISPLAY_R2
+LD R3, DISPLAY_R2
+LD R7, DISPLAY_R7
 
 RET
 ; - - - - - - - - - - - - - - - - -
 
 ; DISPLAY VARS
+DISPLAY_R1 .BLKW #1
+DISPLAY_R2 .BLKW #1
+DISPLAY_R3 .BLKW #1
+DISPLAY_R7 .BLKW #1
+DISPLAY_48 .FILL x0030
+DISPLAY_CHARS .BLKW	#4
 ; = = = = = = = = = = = = = = = = =
 
 
@@ -302,8 +343,9 @@ AND R0, R0, #0 ; Assign R0 = 0
 ; All operations branch here unconditionally
 CALC_END
 
+; Callee loads
 LD R3, CALC_R3
-LD R7, CALC_R7 ; Callee loads
+LD R7, CALC_R7
 
 RET
 ; - - - - - - - - - - - - - - - - -
