@@ -256,11 +256,11 @@ CALC_MULTIPLY
 
 ; Branch if either operator == 0
 ADD R0, R0, #0
-BRz TIMES_ZERO
+BRz ZERO_PRODUCT
 ADD R1, R1, #0
-BRz TIMES_ZERO
+BRz ZERO_PRODUCT
 
-; Assign R3 = rhs operator - 1      5*6 5+5+5+5+5+5
+; Assign R3 = rhs operator - 1
 AND R3, R3, #0
 ADD R3, R3, R1
 ADD R3, R3, #-1
@@ -269,32 +269,38 @@ ADD R3, R3, #-1
 AND R1, R1, #0
 ADD R1, R1, R0
 
+; Add lhs, rhs times
 DO_MULTIPLY
 ADD R0, R0, R1
 ADD R3, R3, #-1
 BRnp DO_MULTIPLY
-
 BRnzp CALC_END
+; --------------------------------------
+
 
 ; Add
 ;--------------------------------------
 CALC_ADD
-
-
+ADD R0, R0, R1
 BRnzp CALC_END
+; --------------------------------------
 
 
 ; Subtract
-;--------------------------------------
+; --------------------------------------
 CALC_SUBTRACT
-
-
+NOT R1, R1
+ADD R1, R1, #1
+ADD R0, R0, R1
 BRnzp CALC_END
+; --------------------------------------
 
-TIMES_ZERO
-AND R0, R0, #0 ; R0 = 0
+; Brach here if either R0 or R1 == 0
+ZERO_PRODUCT
+AND R0, R0, #0 ; Assign R0 = 0
 
-CALC_END ; No valid operator
+; All operations branch here unconditionally
+CALC_END
 
 LD R3, CALC_R3
 LD R7, CALC_R7 ; Callee loads
