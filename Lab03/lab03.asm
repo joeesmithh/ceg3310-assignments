@@ -1,7 +1,9 @@
 .ORIG x3000
 ; MAIN = = = = = = = = = = = = = = = = =
 
-; Get #1
+MAIN
+
+; Get lhs op
 LEA	R0,	PROMPT1
 PUTS
 JSR	GETNUM
@@ -21,7 +23,7 @@ ST	R0,	OPERATOR
 LD R0, NEWLINE_CHAR
 OUT
 
-; Get #2
+; Get rhs op
 LEA	R0,	PROMPT3
 PUTS
 JSR	GETNUM
@@ -40,6 +42,14 @@ JSR CALC
 ; Output result
 JSR DISPLAY
 
+; Output new lines
+LD R0, NEWLINE_CHAR
+OUT
+OUT
+
+; Unconditional to beginning
+BRnzp MAIN
+
 HALT
 
 ; MAIN VARS - - - - - - - - - - - - - - - - -
@@ -55,12 +65,14 @@ PROMPT3         .STRINGZ "Enter second number (0-99): "
 
 
 ; DISPLAY = = = = = = = = = = = = = = = = =
-; Takes an integer stored in R0 and outputs to console
+; Outputs 1-4 digit integer in R0 to console.
 DISPLAY
-ST R1, DISPLAY_R1
-ST R2, DISPLAY_R2
-ST R3, DISPLAY_R3
-ST R7, DISPLAY_R7
+
+; Callee saves
+ST R1, DISPLAY_SAVE_R1
+ST R2, DISPLAY_SAVE_R2
+ST R3, DISPLAY_SAVE_R3
+ST R7, DISPLAY_SAVE_R7
 LEA R2, DISPLAY_ARRAY
 
 ; Save R0 in R1
@@ -95,7 +107,8 @@ SUB10
 ADD R0, R0, #-10
 BRzp BUILD_QUOTIENT
 
-; Quotient found - store remainder
+
+; Quotient found - store remainder in array
 ADD R0, R0, #10
 STR	R0, R2, #0
 
@@ -104,9 +117,9 @@ ADD R1, R1, #0
 BRz DISPLAY_SHOW
 
 ; Prepare for branch
-ADD R2, R2, #1      ; Increment DISPLAY_CHARS address
+ADD R2, R2, #1 ; Increment DISPLAY_CHARS address
 AND R0, R0, #0
-ADD R0, R0, R1      ; R0 = quotient
+ADD R0, R0, R1 ; R0 = quotient
 BRnzp NEW_QUOTIENT
 
 ; BRANCH TARGET: Accumulate quotient
@@ -133,21 +146,21 @@ ADD R0, R2, R3  ; Check if current address < starting address
 BRzp DISPLAY_NEXT
 
 ; Callee loads
-LD R1, DISPLAY_R1
-LD R2, DISPLAY_R2
-LD R3, DISPLAY_R2
-LD R7, DISPLAY_R7
+LD R1, DISPLAY_SAVE_R1
+LD R2, DISPLAY_SAVE_R2
+LD R3, DISPLAY_SAVE_R2
+LD R7, DISPLAY_SAVE_R7
 
 RET
 ; DISPLAY VARS - - - - - - - - - - - - - - - - -
-DISPLAY_R1 .BLKW #1
-DISPLAY_R2 .BLKW #1
-DISPLAY_R3 .BLKW #1
-DISPLAY_R7 .BLKW #1
-DISPLAY_48 .FILL x0030
-DISPLAY_NEG_CHAR .FILL x002D
-DISPLAY_ARRAY .BLKW	#4
-DISPLAY_PROMPT .STRINGZ	"Result: "
+DISPLAY_SAVE_R1  .BLKW     #1
+DISPLAY_SAVE_R2  .BLKW     #1
+DISPLAY_SAVE_R3  .BLKW     #1
+DISPLAY_SAVE_R7  .BLKW     #1
+DISPLAY_48       .FILL     x0030
+DISPLAY_NEG_CHAR .FILL     x002D
+DISPLAY_ARRAY    .BLKW	   #4
+DISPLAY_PROMPT   .STRINGZ "Result: "
 ; End of DISPLAY = = = = = = = = = = = = = = = =
 
 
@@ -161,9 +174,9 @@ DISPLAY_PROMPT .STRINGZ	"Result: "
 GETNUM
 
 ; Callee saves
-ST	R1,	GETNUM_R1
-ST	R2,	GETNUM_R2
-ST	R7,	GETNUM_R7
+ST	R1,	GETNUM_SAVE_R1
+ST	R2,	GETNUM_SAVE_R2
+ST	R7,	GETNUM_SAVE_R7
 
 BRnzp GETNUM_INPUT ; Branch unconditionally on first call to INPUT
 
@@ -171,14 +184,14 @@ GETNUM_ERROR ; Branch target for invalid integer input
 AND R0, R0, #0
 ADD R0, R0, x000A
 OUT ; Output new line
-LEA R0, ERROR_MSG
+LEA R0, GETNUM_ERROR_MSG
 PUTS ; Output error message
 
 GETNUM_INPUT
 
 GETC ; Input 1st character
 OUT  ; Output 1st character
-LD R1, NEG_48
+LD R1, GETNUM_NEG_48
 ADD R2, R0, R1 ; R2 = 1st int
 
 ADD R1, R2, #-9 ; Validate 1st int <= 9
@@ -197,7 +210,7 @@ BRz SINGLE_DIGIT
 ; Integer still double-digit at this point
 
 OUT ; Output 2nd character
-LD R1, NEG_48 
+LD R1, GETNUM_NEG_48 
 ADD R0, R0, R1 ; R0 = 2nd int
 
 ADD R1, R0, #-9 ; Validate 2nd int <= 9
@@ -224,18 +237,18 @@ ADD R0, R0, R2 ; Store first digit in R0
 DOUBLE_DIGIT ; Branch target if 2nd char == integer
 
 ; Callee loads
-LD	R1,	GETNUM_R1
-LD  R2, GETNUM_R2
-LD	R7,	GETNUM_R7
+LD	R1,	GETNUM_SAVE_R1
+LD  R2, GETNUM_SAVE_R2
+LD	R7,	GETNUM_SAVE_R7
 
 RET
 
 ; GETNUM VARS - - - - - - - - - - - - - - - - -
-GETNUM_R1 .BLKW	#1
-GETNUM_R2 .BLKW	#1
-GETNUM_R7 .BLKW	#1
-NEG_48 .FILL xFFD0
-ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
+GETNUM_SAVE_R1   .BLKW	  #1
+GETNUM_SAVE_R2   .BLKW	  #1
+GETNUM_SAVE_R7   .BLKW	  #1
+GETNUM_NEG_48    .FILL    xFFD0
+GETNUM_ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
 ; End of GETNUM = = = = = = = = = = = = = = = = =
 
 
@@ -247,8 +260,8 @@ ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
 GETOP
 
 ; Callee saves
-ST R1, GETOP_R1
-ST R7, GETOP_R7
+ST R1, GETOP_SAVE_R1
+ST R7, GETOP_SAVE_R7
 
 BRnzp GETOP_INPUT ; Branch unconditionally past error message
 
@@ -256,7 +269,7 @@ GETOP_ERROR ; Branch target for invalid input
 AND R0, R0, #0
 ADD R0, R0, x000A
 OUT ; Output new line
-LEA R0, OP_ERROR_MSG
+LEA R0, GETOP_ERROR_MSG
 PUTS
 
 GETOP_INPUT
@@ -283,18 +296,18 @@ BRnzp GETOP_ERROR ; Branch to error message, try new input
 GETOP_SUCCESS ; Branch target for input validation
 
 ; Callee loads
-LD	R1,	GETOP_R1
-LD	R7,	GETOP_R7
+LD	R1,	GETOP_SAVE_R1
+LD	R7,	GETOP_SAVE_R7
 
 RET
 
 ; GETOP VARS - - - - - - - - - - - - - - - - -
-GETOP_R1 .BLKW	#1
-GETOP_R7 .BLKW	#1
-GETOP_TIMES_CHAR .FILL xFFD6 ; Negated ASCII op chars
-GETOP_PLUS_CHAR .FILL xFFD5  ;
-GETOP_MINUS_CHAR .FILL xFFD3 ;
-OP_ERROR_MSG .STRINGZ "Invalid input! Enter one of (+, -, or *): "
+GETOP_SAVE_R1    .BLKW	  #1
+GETOP_SAVE_R7    .BLKW	  #1
+GETOP_TIMES_CHAR .FILL    xFFD6 ; Negated ASCII op chars
+GETOP_PLUS_CHAR  .FILL    xFFD5 ;
+GETOP_MINUS_CHAR .FILL    xFFD3 ;
+GETOP_ERROR_MSG  .STRINGZ "Invalid input! Enter one of (+, -, or *): "
 ; End of GETOP = = = = = = = = = = = = = = = = =
 
 
@@ -312,19 +325,19 @@ OP_ERROR_MSG .STRINGZ "Invalid input! Enter one of (+, -, or *): "
 CALC
 
 ; Callee saves
-ST R3, CALC_R3
-ST R7, CALC_R7
+ST R3, CALC_SAVE_R3
+ST R7, CALC_SAVE_R7
 
 ; Branch to respective operator if match
 LD R3, CALC_TIMES_CHAR
 ADD R3, R2, R3
-BRz CALC_MULTIPLY         ; Multiply
+BRz CALC_MULTIPLY      ; Branch to multiply
 LD R3, CALC_PLUS_CHAR
 ADD R3, R2, R3
-BRz CALC_ADD              ; Add
+BRz CALC_ADD           ; Branch to add
 LD R3, CALC_MINUS_CHAR
 ADD R3, R2, R3
-BRz CALC_SUBTRACT         ; Subtract
+BRz CALC_SUBTRACT      ; Branch to subtract
 
 ; Branch unconditionally if no valid operator
 BRnzp CALC_END
@@ -374,15 +387,15 @@ AND R0, R0, #0 ; Assign R0 = 0
 CALC_END
 
 ; Callee loads
-LD R3, CALC_R3
-LD R7, CALC_R7
+LD R3, CALC_SAVE_R3
+LD R7, CALC_SAVE_R7
 
 RET
 ; CALC VARS - - - - - - - - - - - - - - - - -
-CALC_R3 .BLKW #1
-CALC_R7 .BLKW #1
+CALC_SAVE_R3    .BLKW #1
+CALC_SAVE_R7    .BLKW #1
 CALC_TIMES_CHAR .FILL xFFD6 ; Negated ASCII op chars
-CALC_PLUS_CHAR .FILL xFFD5  ;
+CALC_PLUS_CHAR  .FILL xFFD5 ;
 CALC_MINUS_CHAR .FILL xFFD3 ;
 ; End of CALC = = = = = = = = = = = = = = = = =
 
