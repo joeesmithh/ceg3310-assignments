@@ -1,3 +1,34 @@
+; Write an LC3 assembly program originating at memory address x3000 that will get two single digit integers from the keyboard, perform a integer division, then, display the result, then loop indefinitely. Do not allow for 2 digit or negative numbers.
+; To perform integer division for the integers A/B, run a loop that subtracts A =  A - B. Count the amount of loops required to reach but not exceed 0 and that will give you the division result.
+;
+; Example:
+; 9 / 3:
+; 9 - 3 = 6    Loop iteration 1
+; 6 - 3 = 3    Loop iteration 2
+; 3 - 3 = 0    Loop iteration 3
+; It took 3 loop iterations before we exceed 0 which means 9 / 3 = 3
+;
+; Example:
+; 5 / 2:
+; 5 - 2 = 3    Loop iteration 1
+; 3 - 2 = 1    Loop iteration 2
+;
+; It took 2 loop iterations before we exceed 0 which means 5 / 2 = 2 with a remainder of 1
+;
+; Here is an example execution:
+; Please enter a digit: 9
+; Please enter a digit: 3
+; 9 / 3 = 3
+; Please enter a digit: 5
+; Please enter a digit: 2
+; 5 / 2 = 2
+; Please enter a digit: 8
+; Please enter a digit: 2
+; 8 / 2 = 4
+; Please enter a digit: 2
+; Please enter a digit: 6
+; 2 / 6 = 0
+
 .ORIG x3000
 
 START
