@@ -3,5 +3,8 @@
 HALT
 
 ; Variables
+NEG48 .FILL xFFD0
+POS48 .FILL x0030
+NL .FILL x000A
 
 .END
