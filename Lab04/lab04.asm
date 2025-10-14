@@ -39,20 +39,20 @@ ADD R5, R6, #0
 ADD R6, R6, #-1
 STR	R1,	R6,	#0
 
-; Initialize array at x5FFB
+; Initialize array at x5FFC
 ADD R6, R6, #-1
 LEA	R1,	ARRAY_0
 STR	R1,	R6,	#0
 
-; Declare total variable at x5FFA
+; Declare total variable at x5FFB
 ADD R6, R6, #-1
 
-; Pass parameter arraySize to sumOfSquares() at x5FF9
+; Pass parameter arraySize to sumOfSquares() at x5FFA
 ADD	R6,	R6,	#-1
 LDR R1, R4, #0
 STR R1, R6, #0
 
-; Pass parameter array to sumOfSquares() at x5FF8
+; Pass parameter array to sumOfSquares() at x5FF9
 ADD	R6,	R6,	#-1
 LDR R1, R5, #-2
 STR R1, R6, #0
@@ -73,10 +73,8 @@ ADD R6, R6, #1
 ; Pop array
 ADD R6, R6, #1
 
-; Pop Save R2
-ADD R6, R6, #1
-
 ; Pop save R1
+LDR R1, R6, #0
 ADD R6, R6, #1
 
 ; Pop previous frame pointer
@@ -85,6 +83,7 @@ ADD R6, R6, #1
 
 ; Load main() return address
 LDR R7, R6 #0
+ADD R6, R6, #1
 
 RET
 
@@ -103,30 +102,30 @@ ARRAY_4 .FILL #1
 ; SUMOFSQUARES ======================================
 SUMOFSQUARES
 
-; Push sumOfSquares() return address at x5FF7
+; Push sumOfSquares() return address at x5FF8
 ADD R6, R6, #-1
 STR	R7,	R6,	#0
 
-; Push previous frame pointer at x5FF6
+; Push previous frame pointer at x5FF7
 ADD R6, R6, #-1
 STR R5, R6, #0
 ; Set current frame pointer
 ADD R5, R6, #0
 
-; Save R1 at x5FF5
+; Save R1 at x5FF6
 ADD R6, R6, #-1
 STR R1, R6, #0
 
-; Save R2  at x5FF4
+; Save R2  at x5FF5
 ADD R6, R6, #-1
 STR R2, R6, #0
 
-; Initialize counter to 0 at x5FF3
+; Initialize counter to 0 at x5FF4
 ADD R6, R6, #-1
 AND R1, R1, #0
 STR R1, R6, #0
 
-; Initialize sum to 0 at x5FF2
+; Initialize sum to 0 at x5FF3
 ADD R6, R6, #-1
 AND R1, R1, #0
 STR R1, R6, #0
@@ -179,10 +178,12 @@ ADD R6, R6, #1
 ; Pop counter param
 ADD R6, R6, #1
 
-; Pop save R2
+; Pop Save R2
+LDR R2, R6, #0
 ADD R6, R6, #1
 
 ; Pop save R1
+LDR R1, R6, #0
 ADD R6, R6, #1
 
 ; Pop previous frame pointer
