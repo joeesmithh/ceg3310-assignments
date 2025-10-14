@@ -73,12 +73,13 @@ MAX
 ; SAVING
 ; -----------------------------------------------
 ; max() return address
-LD R6, STACK_BOTTOM         ; R6  = x5FF7
+ADD R6, R6, #-1             ; R6  = x5FF7
 STR R7, R6, #0              ; R7 s-> x5FF7, max's return address
 
-; Previous frame pointer
+; Store previous frame pointer
 ADD R6, R6, #-1             ; R6  = x5FF6
 STR R5, R6, #0              ; R5 s-> x5FF6
+; Set current frame pointer
 ADD R5, R6, #0              ; R5  = x5FF6
 
 ; Save R0
