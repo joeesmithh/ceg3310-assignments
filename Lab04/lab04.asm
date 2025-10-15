@@ -1,23 +1,19 @@
 .ORIG	x3000
 
-; GLOBAL ============================================
+; INITIALIZER CODE ==================================
 LD R6, STACK_PTR        ; R6 = x6000
+LEA	R4,	STATIC_STORAGE  ; R4 = global vars beg. address
 ADD R5, R6, #0          ; R5 = x6000
-LEA	R4,	ARRAY_SIZE      ; R4 = global vars beg. address
 
 ; Execute main()
 JSR MAIN
-
-; TOTAL = R0
-ST R0, TOTAL
-
 HALT
 
 ; Global Variables ----------------------------------
-ARRAY_SIZE .FILL #5
-TOTAL .BLKW	#1
 STACK_PTR .FILL x6000
-; END GLOBAL ========================================
+STATIC_STORAGE
+.FILL #5 ; arraySize global variable
+; END INITIALIZER CODE ==============================
 
 
 
