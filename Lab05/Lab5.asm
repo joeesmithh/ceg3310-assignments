@@ -1,66 +1,62 @@
-.ORIG x3000
+.ORIG	x3000
 
-; #~#~#~#~#~#~#~#~#
-; =-=-=-=-=-=-=-=-=
-; INITIALIZER CODE
-; # DO NOT TOUCH #
-; - - - - - - - - -
-LD R6, STACK_PTR ; load stack pointer
-LEA R4, STATIC_STORAGE ; load global vars pointer
-ADD R5, R6, #0 ; set frame pointer
-; current stack pointer is sitting on main's return slot
-; there are no arguments to our main function
+
+
+
+
+; INITIALIZER CODE =======================================
+LD  R6, STACK_PTR    ; R6 = x6000 (stack start)
+LEA	R4,	GLOBAL_VARS  ; R4 = global vars beg. address
+
+; Execute main()
 JSR MAIN
+
+; Store result in TOTAL for debug purposes
+ST R0, TOTAL
+
 HALT
-; SETUP VARS
+
+; Global Variables ----------------------------------
 STACK_PTR .FILL x6000
-STATIC_STORAGE
-; - - - - - - - - -
-; PUT .FILL GLOBALS HERE
-; - - - - - - - - -
-; INITIALIZER OVER
-; =-=-=-=-=-=-=-=-=
-; #~#~#~#~#~#~#~#~#
+TOTAL       .BLKW #1 ; final total      
+GLOBAL_VARS .BLKW #1 ; global vars start
+ARRAY_SIZE  .FILL #5 ; arraySize
+; END INITIALIZER CODE ===================================
 
 
 
-; #~#~#~#~#~#~#~#~#
-; =-=-=-=-=-=-=-=-=
-MAIN;(void)
 
-; push return address
-ADD R6, R6, #-1
-STR R7, R6, #0
 
-; push previous frame pointer
-ADD R6, R6, #-1
-STR R5, R6, #0
+; MAIN ===================================================
+MAIN
 
-; set current frame pointer
+; Set MAIN return address at stack start
+STR	R7,	R6,	#0
+
+; Set current frame pointer to stack start (no previous frame to push)
 ADD R5, R6, #0
 
-; allocate local variables
-; - - - - - - - - -
-; local variables here
-; - - - - - - - - -
-ADD R6, R6, #0 ; create 0 spaces on the stack (uninitialized)
-; =-=-=-=-=-=-=-=-=
+; TODO: push factorial input (n) as parameter
 
-; CODE GOES HERE
+JSR FACTORIAL
 
-; =-=-=-=-=-=-=-=-=
-; deallocate local variables
-ADD R6, R6, #0
+; Load main() return address and frame pointer
+ADD R5, R6, #0
+LDR R7, R6 #0
 
-; restore and pop previous frame pointer
-LDR R5, R6, #0
-ADD R6, R6, #1
-
-; restore and pop return address
-LDR R7, R6, #0
-ADD R6, R6, #1
-
-; return to caller
 RET
-; =-=-=-=-=-=-=-=-=
-; #~#~#~#~#~#~#~#~#
+; END MAIN ===============================================
+
+
+
+
+
+; FACTORIAL
+FACTORIAL
+
+; TODO: Check n = 0, 1
+
+; TODO: Call factorial (n-1)
+
+RET
+; END FACTORIAL ==========================================
