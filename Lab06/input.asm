@@ -3,11 +3,11 @@
 TRAP_INPUT
 
 ; Callee saves
-ST	R1,	INPUT_SAVE_R1
-ST	R2,	INPUT_SAVE_R2
-ST	R7,	INPUT_SAVE_R7
+ST R1, INPUT_SAVE_R1
+ST R2, INPUT_SAVE_R2
+ST R7, INPUT_SAVE_R7
 
-BRnzp INPUT ; Branch unconditionally on first call to INPUT
+BRnzp INPUT_INPUT ; Branch unconditionally on first call to INPUT
 
 INPUT_ERROR ; Branch target for invalid integer input
 AND R0, R0, #0
@@ -16,7 +16,7 @@ OUT ; Output new line
 LEA R0, INPUT_INPUT_ERROR_MSG
 PUTS ; Output INPUT_ERROR message
 
-INPUT
+INPUT_INPUT
 
 GETC ; Input 1st character
 OUT  ; Output 1st character
@@ -73,10 +73,10 @@ LD R7, INPUT_SAVE_R7
 RET
 
 ; GETNUM VARS - - - - - - - - - - - - - - - - -
-INPUT_SAVE_R1   .BLKW #1
-INPUT_SAVE_R2   .BLKW #1
-INPUT_SAVE_R7   .BLKW #1
-INPUT_NEG_48    .FILL xFFD0
+INPUT_SAVE_R1         .BLKW    #1
+INPUT_SAVE_R2         .BLKW    #1
+INPUT_SAVE_R7         .BLKW    #1
+INPUT_NEG_48          .FILL    xFFD0
 INPUT_INPUT_ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
 
 .END
