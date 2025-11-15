@@ -13,7 +13,7 @@ INPUT_ERROR ; Branch target for invalid integer input
 AND R0, R0, #0
 ADD R0, R0, x000A
 OUT ; Output new line
-LEA R0, INPUT_INPUT_ERROR_MSG
+LEA R0, INPUT_ERROR_MSG
 PUTS ; Output INPUT_ERROR message
 
 INPUT_INPUT
@@ -77,6 +77,6 @@ INPUT_SAVE_R1         .BLKW    #1
 INPUT_SAVE_R2         .BLKW    #1
 INPUT_SAVE_R7         .BLKW    #1
 INPUT_NEG_48          .FILL    xFFD0
-INPUT_INPUT_ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
+INPUT_ERROR_MSG .STRINGZ "Invalid input! Stay within (0-99): "
 
 .END

@@ -1,7 +1,0 @@
-.ORIG x3000
-
-TRAP x40
-TRAP x41
-HALT
-
-.END
