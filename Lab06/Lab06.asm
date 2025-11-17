@@ -57,6 +57,10 @@ GETC
 OUT
 STR	R0,	R5, #-2
 
+; Print newline
+LD R0, NEWLINE
+OUT
+
 ; if(selection == 'p')
 ; ------------------------------
 LD R1, NEG_LOWERCASE_P
@@ -64,18 +68,30 @@ LDR R0, R5, #-2
 ADD R0, R0, R1
 BRnp ELSE_IF_A          ; selection != 'p'
 
-; node_t **head parameter
-ADD R6, R6, #-1         ; R6 = x5FFB
-ADD R0, R5, #-1         ; R0 = node_t *head address
-STR R0, R6, #0          ; R0 → x5FFB
+    ; node_t **head parameter
+    ADD R6, R6, #-1         ; R6 = x5FFB
+    ADD R0, R5, #-1         ; R0 = node_t *head address
+    STR R0, R6, #0          ; R0 → x5FFB
 
+    ; printf("Contents of the linked list: ")
+    LEA R0, PROMPT_PRINT
+    PUTS
 
+    ; Print newline
+    LD R0, NEWLINE
+    OUT
 
+    ; printList(&head)
+    JSR PRINT_LIST
 
-; Pop if(selection == 'p') variables
-ADD R6, R6, #1          ; R6 = x5FFC
+    ; Print newline
+    LD R0, NEWLINE
+    OUT
 
-BRnzp WHILE
+    ; Pop if(selection == 'p') variables
+    ADD R6, R6, #1          ; R6 = x5FFC
+
+    BRnzp WHILE
 
 ; else if(selection == 'a')
 ; ------------------------------
@@ -85,35 +101,39 @@ LDR R0, R5, #-2
 ADD R0, R0, R1
 BRnp ELSE_IF_R          ; selection != 'a'
 
-; Push int a variable
-ADD R6, R6, #-1         ; R6 = x5FFB
+    ; Push int a variable
+    ADD R6, R6, #-1         ; R6 = x5FFB
 
-; Input number
-LEA R0, PROMPT_ADD      ; Print input prompt
-PUTS
-TRAP x40                ; R0 = user number → x5FFB
-STR R0, R6, #0
-LD R0, NEWLINE
-OUT                     ; Print newline
+    ; Input number
+    LEA R0, PROMPT_ADD      ; Print input prompt
+    PUTS
+    TRAP x40                ; R0 = user number → x5FFB
+    STR R0, R6, #0
+    LD R0, NEWLINE
+    OUT                     ; Print newline
 
-; Push int a parameter
-ADD R6, R6, #-1         ; R6 = x5FFA
-LDR R0, R5, #-3         ; R0 = int a → x5FFA
-STR R0, R6, #0
+    ; Push int a parameter
+    ADD R6, R6, #-1         ; R6 = x5FFA
+    LDR R0, R5, #-3         ; R0 = int a → x5FFA
+    STR R0, R6, #0
 
-; Push node_t **head parameter
-ADD R6, R6, #-1         ; R6 = x5FF9
-ADD R0, R5, #-1         ; R0 = node_t *head address → x5FF9
-STR R0, R6, #0
+    ; Push node_t **head parameter
+    ADD R6, R6, #-1         ; R6 = x5FF9
+    ADD R0, R5, #-1         ; R0 = node_t *head address → x5FF9
+    STR R0, R6, #0
 
-; addValue(&head, a)
-JSR ADD_VALUE
+    ; addValue(&head, a)
+    JSR ADD_VALUE
 
-; Pop if(selection == 'a') variables
-ADD R6, R6, #3          ; R6 = x5FFC
+    ; Print newline
+    LD R0, NEWLINE
+    OUT
 
-; Branch unconditionally to while check
-BRnzp WHILE
+    ; Pop if(selection == 'a') variables
+    ADD R6, R6, #3          ; R6 = x5FFC
+
+    ; Branch unconditionally to while check
+    BRnzp WHILE
 
 ; else if(selection == 'r')
 ; ------------------------------
@@ -123,16 +143,36 @@ LDR R0, R5, #-2
 ADD R0, R0, R1
 BRnp WHILE              ; selection != 'r'
 
-; node_t **head parameter
-ADD R6, R6, #-1         ; R6 = x5FFB
-ADD R0, R5, #-1         ; R0 = node_t *head address
-STR R0, R6, #0          ; R0 → x5FFB
+    ; Push int r variable
+    ADD R6, R6, #-1         ; R6 = x5FFB
 
+    ; Input number
+    LEA R0, PROMPT_REMOVE   ; Print input prompt
+    PUTS
+    TRAP x40                ; R0 = user number → x5FFB
+    STR R0, R6, #0
+    LD R0, NEWLINE
+    OUT                     ; Print newline
 
+    ; Push int r parameter
+    ADD R6, R6, #-1
+    LDR R0, R5, #-3         ; R0 = int r → stack
+    STR R0, R6, #0
 
+    ; Push node_t **head parameter
+    ADD R6, R6, #-1
+    ADD R0, R5, #-1         ; R0 = node_t **head → stack
+    STR R0, R6, #0
 
-; Pop if(selection == 'p') variables
-ADD R6, R6, #1          ; R6 = x5FFC
+    ; removeValue(&head, r);
+    JSR REMOVE_VALUE
+
+    ; Print newline
+    LD R0, NEWLINE
+    OUT
+
+    ; Pop if(selection == 'r') variables
+    ADD R6, R6, #3
 
 ; while(selection != 'q');
 ; ------------------------------
@@ -148,11 +188,6 @@ BRnp DO                 ; selection != 'q'
 ; Print newline
 LD R0, NEWLINE
 OUT
-
-
-
-
-
 
 ; Pop main() local variables
 ADD R6, R6, #2          ; R6 = x5FFE
@@ -173,11 +208,11 @@ NEG_LOWERCASE_A .FILL    xFF9F
 NEG_LOWERCASE_P .FILL    xFF90
 NEG_LOWERCASE_Q .FILL    xFF8F
 NEG_LOWERCASE_R .FILL    xFF8E
-NEWLINE         .FILL    #10
+NEWLINE         .FILL    x000A
 PROMPT_MENU     .STRINGz "Available options:\np - Print linked list\na - Add value to linked list\nr - Remove value from linked list\nq - Quit\nChoose an option: "
-PROMPT_PRINT    .STRINGz "\nContents of the linked list:\n"
-PROMPT_ADD      .STRINGz "\nType a number to add: "
-PROMPT_REMOVE   .STRINGz "\nType a number to remove: "
+PROMPT_PRINT    .STRINGz "Contents of the linked list: "
+PROMPT_ADD      .STRINGz "Type a number to add: "
+PROMPT_REMOVE   .STRINGz "Type a number to remove: "
 ; \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ; END int main()
 ; \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -199,24 +234,52 @@ ADD R6, R6, #-1
 STR R5, R6, #0  
 ADD R5, R6, #0 
 
-; Push R1
+; Push node_t *current
 ADD R6, R6, #-1
-STR R1, R6, #0
+LDR R0, R5, #2          ; R0 = **head
+LDR R0, R0, #0          ; R0 = *head
+STR R0, R6, #0
 
-; Push R2
-ADD R6, R6, #-1
-STR R2, R6, #0
+; while(current != 0)
+; ------------------------------
+PRINT_LIST_WHILE
+LDR R0, R5, #-1         ; R0 = *current
+ADD R0, R0, #0
+BRz PRINT_LIST_RETURN
 
+    ; printf("%d", current->value)
+    LDR R0, R5, #-1         ; R0 = *current
+    LDR R0, R0, #0          ; R0 = current->value
+    TRAP x41                ; Print R0
 
+    ; current = current->next
+    LDR R0, R5, #-1         ; R0 = *current
+    ADD R0, R0, #1          ; R0 = *current + 1
+    LDR R0, R0, #0          ; R0 = current->next
+    STR R0, R5, #-1         ; *current = *current->next
 
+    ; if(current != 0)
+    ; ------------------------------
+    LDR R0, R5, #-1         ; R0 = *current
+    ADD R0, R0, #0
+    BRz PRINT_LIST_WHILE
 
+        ; printf(" -> ")
+        LEA R0, PRINT_LIST_ARROW
+        PUTS
 
-; Pop R2
-LDR R2, R6, #0
-ADD R6, R6, #1
+    ; Branch unconditionally to while(current != 0)
+    BRnzp PRINT_LIST_WHILE
 
-; Pop R1
-LDR R1, R6, #0
+; return
+; ------------------------------
+PRINT_LIST_RETURN
+
+; printf("\n")
+LD R0, PRINT_LIST_NEWLINE
+OUT
+
+; Pop node_t *current
 ADD R6, R6, #1
 
 ; Pop previous frame pointer
@@ -228,6 +291,9 @@ LDR R7, R6, #0
 ADD R6, R6, #1
 
 RET
+; printList() Variables
+PRINT_LIST_ARROW   .STRINGz " -> "
+PRINT_LIST_NEWLINE .FILL    x000A
 ; \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 ; END void printList(node_t **head)
 ; \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
